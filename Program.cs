@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // Register UserService
 builder.Services.AddSingleton<IUserService, UserService>();
@@ -18,9 +19,11 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage(); 
     app.MapOpenApi();
-    Console.WriteLine("OpenAPI documentation available at /swagger/v1/swagger.json");
-
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    
 }
 
 // Map UserController endpoints
