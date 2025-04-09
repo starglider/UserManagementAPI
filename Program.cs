@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.OpenApi.Models;
 using UserManagementAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 
 // Register UserService
 builder.Services.AddSingleton<IUserService, UserService>();
@@ -25,6 +27,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+
+app.UseMiddleware<UserManagementAPI.Middleware.TokenValidationMiddleware>();
+
+// Add request logging middleware
+app.UseMiddleware<UserManagementAPI.Middleware.RequestLoggingMiddleware>();
+
+
 // Add global exception handling middleware
 app.Use(async (context, next) =>
 {
@@ -39,8 +48,6 @@ app.Use(async (context, next) =>
     }
 });
 
-// Add request logging middleware
-app.UseMiddleware<UserManagementAPI.Middleware.RequestLoggingMiddleware>();
 
 // Map UserController endpoints
 app.MapControllers();
