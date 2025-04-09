@@ -1,4 +1,4 @@
-
+using Microsoft.AspNetCore.Http;
 using UserManagementAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,8 +23,24 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.UseSwagger();
     app.UseSwaggerUI();
-    
 }
+
+// Add global exception handling middleware
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsync("{\"error\"}: {\"Internal server error: "+ex.Message+"\"}");
+    }
+});
+
+// Add request logging middleware
+app.UseMiddleware<UserManagementAPI.Middleware.RequestLoggingMiddleware>();
 
 // Map UserController endpoints
 app.MapControllers();

@@ -18,56 +18,111 @@ namespace UserManagementAPI.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<User>> GetUsers()
         {
-            return Ok(_userService.GetAllUsers());
+            try
+            {
+                return Ok(_userService.GetAllUsers());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = $"Internal server error: {ex.Message}" });
+            }
         }
 
         [HttpGet("{id}")]
         public ActionResult<User> GetUser(int id)
         {
-            var user = _userService.GetUserById(id);
-            if (user == null)
+            try
             {
-                return NotFound();
+                var user = _userService.GetUserById(id);
+                if (user == null)
+                {
+                    return NotFound(new { error = "User not found." });
+                }
+                return Ok(user);
             }
-            return Ok(user);
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = $"Internal server error: {ex.Message}" });
+            }
         }
 
         [HttpPost]
-        public ActionResult AddUser(User user)
+        public ActionResult AddUser([FromBody] User user)
         {
-            _userService.AddUser(user);
-            return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
+            try
+            {
+                if (user == null)
+                {
+                    return BadRequest(new { error = "User object cannot be null." });
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new { error = "Invalid model state.", details = ModelState });
+                }
+
+                _userService.AddUser(user);
+                return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = $"Internal server error: {ex.Message}" });
+            }
         }
 
         [HttpPut("{id}")]
-        public ActionResult UpdateUser(int id, User user)
+        public ActionResult UpdateUser(int id, [FromBody] User user)
         {
-            if (id != user.Id)
+            try
             {
-                return BadRequest();
-            }
+                if (user == null)
+                {
+                    return BadRequest(new { error = "User object cannot be null." });
+                }
 
-            var existingUser = _userService.GetUserById(id);
-            if (existingUser == null)
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new { error = "Invalid model state.", details = ModelState });
+                }
+
+                if (id != user.Id)
+                {
+                    return BadRequest(new { error = "User ID in the URL does not match the ID in the body." });
+                }
+
+                var existingUser = _userService.GetUserById(id);
+                if (existingUser == null)
+                {
+                    return NotFound(new { error = "User not found." });
+                }
+
+                _userService.UpdateUser(user);
+                return NoContent();
+            }
+            catch (Exception ex)
             {
-                return NotFound();
+                return StatusCode(500, new { error = $"Internal server error: {ex.Message}" });
             }
-
-            _userService.UpdateUser(user);
-            return NoContent();
         }
 
         [HttpDelete("{id}")]
         public ActionResult DeleteUser(int id)
         {
-            var user = _userService.GetUserById(id);
-            if (user == null)
+            try
             {
-                return NotFound();
-            }
+                var user = _userService.GetUserById(id);
+                if (user == null)
+                {
+                    return NotFound(new { error = "User not found." });
+                }
 
-            _userService.DeleteUser(id);
-            return NoContent();
+                _userService.DeleteUser(id);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = $"Internal server error: {ex.Message}" });
+            }
         }
     }
 }
